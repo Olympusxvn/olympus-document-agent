@@ -23,6 +23,7 @@ def test_gmail_credentials_use_adc_not_oauth_env(monkeypatch):
     assert captured["scopes"] == [
         "https://www.googleapis.com/auth/gmail.readonly",
         "https://www.googleapis.com/auth/gmail.compose",
+        "https://www.googleapis.com/auth/spreadsheets",
     ]
     assert captured["subject"] == "vat@org.example"
     assert creds is not None

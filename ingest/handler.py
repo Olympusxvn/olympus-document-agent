@@ -19,6 +19,7 @@ def ingest_messages(
             gmail_id=msg.gmail_id,
             history_id=history_id,
             email_address=email_address,
+            sender=msg.sender,
             attachment_ids=list(msg.attachment_ids),
         )
         results.append(store.create_received(record))
@@ -33,6 +34,7 @@ def ingest_poll(email_address: str, gmail: GmailPort, store: RunStorePort) -> li
             message_id=msg.message_id,
             gmail_id=msg.gmail_id,
             email_address=email_address,
+            sender=msg.sender,
             attachment_ids=list(msg.attachment_ids),
         )
         results.append(store.create_received(record))

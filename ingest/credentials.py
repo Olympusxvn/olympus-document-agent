@@ -8,14 +8,15 @@ from google.auth.credentials import Credentials
 GMAIL_SCOPES = [
     "https://www.googleapis.com/auth/gmail.readonly",
     "https://www.googleapis.com/auth/gmail.compose",
+    "https://www.googleapis.com/auth/spreadsheets",
 ]
 
 
 def gmail_credentials() -> Credentials:
     """ADC on Cloud Run (runtime service account). No OAuth client or refresh token.
 
-    If GMAIL_ADDRESS is set and credentials support domain-wide delegation
-    (service account), impersonate that mailbox.
+    Includes Gmail (read + drafts) and Sheets (Posted append). If GMAIL_ADDRESS
+    is set and credentials support domain-wide delegation, impersonate that mailbox.
     """
     credentials, _project = google.auth.default(scopes=GMAIL_SCOPES)
     subject = (os.environ.get("GMAIL_ADDRESS") or "").strip()

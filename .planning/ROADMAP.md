@@ -6,9 +6,9 @@ Ship a Taskmaster demo in three coarse phases: prove Gmail→Cloud Run→Firesto
 
 ## Phases
 
-- [ ] **Phase 1: Gmail ingest** - Event-driven Run records on Cloud Run with no chat trigger
-- [ ] **Phase 2: Extract and gates** - Gemini 3.5 Plans plus code-only permission to write
-- [ ] **Phase 3: Ledger, drafts, demo** - Posted Sheets, Needs review drafts, 4-minute script
+- [x] **Phase 1: Gmail ingest** - Event-driven Run records on Cloud Run with no chat trigger
+- [x] **Phase 2: Extract and gates** - Gemini 3.5 Plans plus code-only permission to write
+- [x] **Phase 3: Ledger, drafts, demo** - Posted Sheets, Needs review drafts, 4-minute script
 
 ## Phase Details
 
@@ -25,8 +25,8 @@ Ship a Taskmaster demo in three coarse phases: prove Gmail→Cloud Run→Firesto
 **UI hint**: no
 
 Plans:
-- [ ] 01-01: Cloud Run ADK skeleton, Firestore Run schema, secrets
-- [ ] 01-02: Gmail watch + Pub/Sub push (Scheduler poll fallback) + watch renewal
+- [x] 01-01: Cloud Run ADK skeleton, Firestore Run schema, secrets
+- [x] 01-02: Gmail watch + Pub/Sub push (Scheduler poll fallback) + watch renewal
 
 ### Phase 2: Extract and gates
 **Goal**: Every Plan is gated in code; the model cannot call Workspace write APIs.
@@ -41,8 +41,8 @@ Plans:
 **UI hint**: no
 
 Plans:
-- [ ] 02-01: Plan schema + Gemini 3.5 extract (one re-extract on schema miss)
-- [ ] 02-02: Code gates + Firestore status transitions + idempotency tests
+- [x] 02-01: Plan schema + Gemini 3.5 extract (one re-extract on schema miss)
+- [x] 02-02: Code gates + Firestore status transitions + idempotency tests
 
 ### Phase 3: Ledger, drafts, demo
 **Goal**: Visible side effects and a judge-proof video.
@@ -57,8 +57,8 @@ Plans:
 **UI hint**: no
 
 Plans:
-- [ ] 03-01: Harness tools — Sheets append, Gmail draft, never send
-- [ ] 03-02: Architecture diagram, README spin-up, film `docs/DEMO.md`
+- [x] 03-01: Harness tools — Sheets append, Gmail draft, never send
+- [x] 03-02: Architecture diagram, README spin-up, film `docs/DEMO.md`
 
 ## Progress
 
@@ -67,9 +67,9 @@ Phases execute in numeric order: 1 → 2 → 3
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Gmail ingest | 0/2 | Not started | - |
-| 2. Extract and gates | 0/2 | Not started | - |
-| 3. Ledger, drafts, demo | 0/2 | Not started | - |
+| 1. Gmail ingest | 2/2 | Complete (code) | 2026-08-25 |
+| 2. Extract and gates | 2/2 | Complete (code) | 2026-08-25 |
+| 3. Ledger, drafts, demo | 2/2 | Complete (code) | 2026-08-25 |
 
 ---
-*Last updated: 2026-08-25 after initialization*
+*Last updated: 2026-08-25 after Phase 3 harness*

@@ -9,9 +9,10 @@ See also: [CONTEXT.md](../CONTEXT.md), [adr/0001-model-reasons-machine-executes.
 Firestore document id: Gmail `message-id` (RFC 5322, stable across retries).
 
 ```
-received → extracting → validating → posted
+received → extracting → validating → validated   (Phase 2; no Sheets yet)
                                  ↘ needs_review
                                  ↘ skipped_duplicate
+validated → posted                                 (Phase 3 Sheets append)
 ```
 
 | Status | Meaning | Side effects allowed |
@@ -19,11 +20,12 @@ received → extracting → validating → posted
 | `received` | Ingest stored the message-id and attachment refs | none |
 | `extracting` | Gemini is filling a Plan | none |
 | `validating` | Gates running | none |
+| `validated` | All required gates passed. Sheets write is Phase 3 | none |
 | `posted` | All required gates passed and Sheets append succeeded | Sheets (already done) |
-| `needs_review` | Schema, math, or confidence failed | Gmail draft (already done) |
-| `skipped_duplicate` | Same message-id already terminal, or (seller_mst, invoice_number) already `posted` | none |
+| `needs_review` | Schema, math, confidence, or extract failed | Gmail draft in Phase 3 |
+| `skipped_duplicate` | Same message-id already terminal, or (seller_mst, invoice_number) already `validated` or `posted` | none |
 
-Transitions are monotonic. A terminal status (`posted`, `needs_review`, `skipped_duplicate`) never goes back to `extracting`.
+Transitions are monotonic. A terminal status (`validated`, `posted`, `needs_review`, `skipped_duplicate`) never goes back to `extracting`.
 
 Crash rule: if status is `posted`, a retry must no-op. If status is `validating` and Sheets append is uncertain, the harness **reads** the Sheet (or a Firestore `sheet_row_id`) before appending — prefer recording `sheet_row_id` in the same Firestore transaction after a successful append.
 
@@ -60,17 +62,18 @@ Evaluated in order. First fail wins. The model does not see gate internals and c
 | Math | `subtotal + vat_amount == total` with absolute tolerance **1** VND | `needs_review` |
 | Confidence | `confidence >= HARNESS_CONFIDENCE_THRESHOLD` (default **0.75**) | `needs_review` |
 | Idempotency (message) | No existing Run with this message-id in a terminal status | `skipped_duplicate` |
-| Idempotency (invoice) | No existing **posted** Run with same `(seller_mst, invoice_number)` | `skipped_duplicate` |
+| Idempotency (invoice) | No existing **validated or posted** Run with same `(seller_mst, invoice_number)` | `skipped_duplicate` |
 
 Write permission:
 
 ```
 math pass AND schema pass AND confidence pass AND not duplicate
-  → EXEC-01 Sheets append
+  → Phase 2: status validated (no Sheets)
+  → Phase 3: EXEC-01 Sheets append → posted
 else if duplicate
   → skipped_duplicate, no draft required
 else
-  → EXEC-02 Gmail draft, no Sheets
+  → needs_review; Phase 3 EXEC-02 Gmail draft, no Sheets
 ```
 
 Optional **GATE-05** (v2 / if time): MST Mod-11 on the 10-digit base (weights `31,29,23,19,17,13,7,5,3`; check digit `11 - (sum mod 11)` with 11→0 and 10 invalid). 13-digit codes use the first 10 digits. Failure → `needs_review`. Do not block the film if unimplemented.

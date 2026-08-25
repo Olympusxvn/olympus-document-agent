@@ -22,6 +22,18 @@ class GmailApi:
             self._service = build("gmail", "v1", credentials=gmail_credentials())
         return self._service
 
+    def download_attachment(self, gmail_id: str, attachment_id: str) -> bytes:
+        import base64
+
+        payload = (
+            self.service.users()
+            .messages()
+            .attachments()
+            .get(userId="me", messageId=gmail_id, id=attachment_id)
+            .execute()
+        )
+        return base64.urlsafe_b64decode(payload["data"])
+
     def messages_since(self, email_address: str, history_id: str) -> list[GmailMessage]:
         del email_address
         start = None

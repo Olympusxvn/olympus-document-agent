@@ -2,7 +2,13 @@ from __future__ import annotations
 
 from google.cloud import firestore
 
-from store.models import TERMINAL_STATUSES, RunRecord, RunStatus, firestore_doc_id
+from store.models import (
+    INVOICE_OCCUPIED_STATUSES,
+    TERMINAL_STATUSES,
+    RunRecord,
+    RunStatus,
+    firestore_doc_id,
+)
 from store.runs import CreateReceivedResult
 
 
@@ -35,3 +41,25 @@ class FirestoreRunStore:
             return CreateReceivedResult(record=stored, created=True)
 
         return _txn(self._db.transaction())
+
+    def save(self, record: RunRecord) -> RunRecord:
+        self._col.document(firestore_doc_id(record.message_id)).set(record.model_dump())
+        return record
+
+    def posted_identities(self) -> set[tuple[str, str]]:
+        found: set[tuple[str, str]] = set()
+        for status in INVOICE_OCCUPIED_STATUSES:
+            for snap in self._col.where("status", "==", status.value).stream():
+                rec = RunRecord.model_validate(snap.to_dict())
+                if rec.seller_mst and rec.invoice_number:
+                    found.add((rec.seller_mst, rec.invoice_number))
+        return found
+
+    def list_recent(self, limit: int = 50) -> list[RunRecord]:
+        query = self._col.order_by(
+            "received_at", direction=firestore.Query.DESCENDING
+        ).limit(limit)
+        records: list[RunRecord] = []
+        for snap in query.stream():
+            records.append(RunRecord.model_validate(snap.to_dict()))
+        return records

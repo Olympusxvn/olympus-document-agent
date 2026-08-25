@@ -9,6 +9,7 @@ class GmailMessage:
     gmail_id: str
     message_id: str
     attachment_ids: list[str] = field(default_factory=list)
+    sender: str | None = None
 
 
 class GmailPort(Protocol):
@@ -17,6 +18,16 @@ class GmailPort(Protocol):
 
     def list_inbox_candidates(self, email_address: str) -> list[GmailMessage]:
         ...
+
+
+def header_value(headers: list[dict], name: str) -> str | None:
+    needle = name.lower()
+    for header in headers:
+        if header.get("name", "").lower() == needle:
+            value = (header.get("value") or "").strip()
+            if value:
+                return value
+    return None
 
 
 def rfc_message_id_from_headers(
@@ -58,4 +69,5 @@ def message_from_gmail_resource(resource: dict) -> GmailMessage:
         gmail_id=gmail_id,
         message_id=rfc_message_id_from_headers(headers, gmail_id=gmail_id),
         attachment_ids=attachment_ids_from_payload(payload),
+        sender=header_value(headers, "From"),
     )

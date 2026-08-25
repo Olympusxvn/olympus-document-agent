@@ -1,6 +1,6 @@
 # Demo script (~4 minutes)
 
-Film unedited. Do not use chat to “run” the agent. Any on-screen UI is a Run viewer only.
+Phase 3 is implemented in code: pass → Sheets `Posted` row; math-fail → Gmail draft, no row; duplicate → no second row. Film unedited. Do not use chat to “run” the agent.
 
 Goal: Taskmaster (event → other apps) + harness (pass writes, fail does not) + GCP proof.
 
