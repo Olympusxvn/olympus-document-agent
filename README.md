@@ -42,38 +42,30 @@ Gmail (dedicated) → Pub/Sub → Cloud Run (ADK)
 
 ```powershell
 gcloud auth login
-gcloud config set project YOUR_PROJECT_ID
-.\scripts\gcp_setup.ps1 -ProjectId YOUR_PROJECT_ID
+gcloud config set project olympus-vat-agent
+.\scripts\gcp_setup.ps1
 ```
 
 ## Spin-up (Phase 1)
 
-1. Copy `.env.example` to `.env`. Use a **dedicated** Gmail, not a personal inbox.
-2. Create an OAuth desktop client (Gmail API). Then:
+GitHub → Cloud Run is the deploy path. Gmail uses **Application Default Credentials** on the Cloud Run runtime service account. Do **not** set `GMAIL_CLIENT_ID`, `GMAIL_CLIENT_SECRET`, or `GMAIL_REFRESH_TOKEN`.
 
-```powershell
-python -m venv venv
-venv\Scripts\activate
-pip install -r requirements.txt
-$env:GMAIL_CLIENT_ID="..."
-$env:GMAIL_CLIENT_SECRET="..."
-python scripts/gmail_oauth.py
-```
+Cloud Run **Variables & Secrets** — keep:
 
-Put the printed refresh token in `.env` as `GMAIL_REFRESH_TOKEN`.
+- `GOOGLE_CLOUD_PROJECT` = `olympus-vat-agent`
+- `GMAIL_ADDRESS` = mailbox to watch (Workspace user; impersonated when the runtime SA has domain-wide delegation)
+- `GMAIL_PUBSUB_TOPIC` = `projects/olympus-vat-agent/topics/gmail-vat`
+- `INGEST_TOKEN` = shared secret for `/internal/*`
 
-3. Enable APIs, Pub/Sub topic, Firestore, and Gmail publisher IAM via `scripts/gcp_setup.ps1`.
-4. Deploy (min instances 0):
+Delete the three OAuth variables, then **Deploy**.
 
-```powershell
-gcloud run deploy olympus-vat-agent --source . --region asia-southeast1 --set-env-vars GOOGLE_CLOUD_PROJECT=YOUR_PROJECT_ID
-```
+The runtime service account needs Gmail API access (org policy: ADC / IAM, not API keys). Grant Gmail scopes to that SA in Google Workspace Admin if the inbox is a user mailbox.
 
-5. Point a Pub/Sub **push** subscription at `https://SERVICE_URL/pubsub`.
-6. Call `POST /internal/watch-renew` (header `X-Ingest-Token`) and schedule that job **daily**. Gmail `users.watch` **expires in about 7 days**; if you skip renewal, the inbox goes silent.
-7. Fallback: Cloud Scheduler `POST /internal/poll` every minute if push is blocked.
+Pub/Sub push: `https://olympus-document-agent-78140974757.asia-southeast1.run.app/pubsub`
 
-Sheets env vars wait until Phase 3. Local tests: `python -m pytest tests -q`.
+Daily: `POST /internal/watch-renew` with header `X-Ingest-Token` (watch expires in ~7 days). Fallback: Scheduler `POST /internal/poll`.
+
+Local tests: `python -m pytest tests -q`.
 
 ## Out of scope for v1
 

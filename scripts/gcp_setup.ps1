@@ -1,6 +1,6 @@
 #Requires -Version 5.1
 param(
-  [Parameter(Mandatory = $true)][string]$ProjectId,
+  [string]$ProjectId = "olympus-vat-agent",
   [string]$Region = "asia-southeast1",
   [string]$Service = "olympus-vat-agent",
   [string]$Topic = "gmail-vat"
@@ -58,15 +58,15 @@ gcloud pubsub topics add-iam-policy-binding $Topic `
 Write-Host @"
 
 Next:
-  1. python -m pip install -r requirements.txt
-  2. Set GMAIL_* in .env (scripts/gmail_oauth.py for refresh token)
-  3. Deploy:
+  1. Cloud Run env: GOOGLE_CLOUD_PROJECT, GMAIL_ADDRESS, GMAIL_PUBSUB_TOPIC, INGEST_TOKEN
+     (ADC — do not set GMAIL_CLIENT_ID / SECRET / REFRESH_TOKEN)
+  2. Deploy via GitHub Cloud Build or:
 
      gcloud run deploy $Service --source . --region $Region --allow-unauthenticated --set-env-vars GOOGLE_CLOUD_PROJECT=$ProjectId
 
      For production, prefer --no-allow-unauthenticated and a Pub/Sub push invoker SA.
 
-  4. Create a push subscription to https://SERVICE_URL/pubsub
-  5. POST /internal/watch-renew with INGEST_TOKEN (and schedule it daily — watch expires in ~7 days)
-  6. Optional fallback: Cloud Scheduler POST /internal/poll every 1 minute with INGEST_TOKEN
+  3. Create a push subscription to https://SERVICE_URL/pubsub
+  4. POST /internal/watch-renew with INGEST_TOKEN (and schedule it daily — watch expires in ~7 days)
+  5. Optional fallback: Cloud Scheduler POST /internal/poll every 1 minute with INGEST_TOKEN
 "@

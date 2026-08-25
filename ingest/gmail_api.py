@@ -1,34 +1,14 @@
 from __future__ import annotations
 
-import os
 from typing import Any
 
-from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
+from ingest.credentials import gmail_credentials
 from ingest.gmail_sync import GmailMessage, message_from_gmail_resource
 from ingest.watch import build_watch_body
 from store.cursors import MailboxCursorStore
-
-GMAIL_SCOPES = [
-    "https://www.googleapis.com/auth/gmail.readonly",
-    "https://www.googleapis.com/auth/gmail.compose",
-]
-
-
-def gmail_credentials_from_env() -> Credentials:
-    client_id = os.environ["GMAIL_CLIENT_ID"]
-    client_secret = os.environ["GMAIL_CLIENT_SECRET"]
-    refresh_token = os.environ["GMAIL_REFRESH_TOKEN"]
-    return Credentials(
-        token=None,
-        refresh_token=refresh_token,
-        token_uri="https://oauth2.googleapis.com/token",
-        client_id=client_id,
-        client_secret=client_secret,
-        scopes=GMAIL_SCOPES,
-    )
 
 
 class GmailApi:
@@ -39,7 +19,7 @@ class GmailApi:
     @property
     def service(self) -> Any:
         if self._service is None:
-            self._service = build("gmail", "v1", credentials=gmail_credentials_from_env())
+            self._service = build("gmail", "v1", credentials=gmail_credentials())
         return self._service
 
     def messages_since(self, email_address: str, history_id: str) -> list[GmailMessage]:
